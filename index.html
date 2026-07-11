@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>База Квестов</title>
+    <title>CubixWorld TechnoMagic Quests</title>
+    <link rel="icon" type="image/x-icon" href="https://cubixworld.net/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -92,41 +93,7 @@
             opacity: 0;
         }
 
-        /* --- КНОПКА СВЕРНУТЬ/РАЗВЕРНУТЬ --- */
-        .sidebar-toggle {
-            position: absolute;
-            right: -14px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 30;
-            width: 28px;
-            height: 52px;
-            background: var(--bg-sidebar);
-            border: 1px solid var(--border-color);
-            border-left: none;
-            border-radius: 0 8px 8px 0;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-            box-shadow: 3px 0 8px rgba(0, 0, 0, 0.3);
-        }
 
-        .sidebar-toggle:hover {
-            background: var(--bg-card-hover);
-            color: var(--text-accent);
-            box-shadow: 3px 0 12px rgba(167, 139, 250, 0.25);
-        }
-
-        .sidebar-toggle svg {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar-container.collapsed .sidebar-toggle svg {
-            transform: rotate(180deg);
-        }
 
         .resizer {
             width: 4px;
@@ -146,24 +113,30 @@
         }
 
         .logo-area {
-            padding: 20px;
-            font-weight: 700;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border-color);
-            color: var(--text-accent);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 2px;
         }
 
-        .total-badge {
-            font-size: 0.75rem;
-            background: var(--bg-input);
-            padding: 4px 8px;
-            border-radius: 4px;
+        .logo-line1 {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             color: var(--text-muted);
+        }
+
+        .logo-line2 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            background: linear-gradient(90deg, #a78bfa 0%, #60a5fa 50%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
         }
 
         .menu-list {
@@ -493,9 +466,9 @@
            МОБИЛЬНЫЙ АДАПТИВ (≤ 768px)
            ============================================ */
 
-        /* Кнопка-гамбургер в шапке (только мобильный) */
-        .mobile-menu-btn {
-            display: none;
+        /* Кнопка-гамбургер в шапке (для ПК и мобилок) */
+        .menu-btn {
+            display: flex;
             align-items: center;
             justify-content: center;
             width: 40px;
@@ -506,11 +479,11 @@
             color: var(--text-muted);
             cursor: pointer;
             flex-shrink: 0;
-            margin-right: 12px;
+            margin-right: 16px;
             transition: background 0.2s, color 0.2s;
         }
 
-        .mobile-menu-btn:hover {
+        .menu-btn:hover {
             background: var(--bg-card-hover);
             color: var(--text-accent);
         }
@@ -557,10 +530,7 @@
                 pointer-events: all;
             }
 
-            /* Показываем гамбургер */
-            .mobile-menu-btn {
-                display: flex;
-            }
+
 
             /* Шапка на мобильном */
             .top-bar {
@@ -718,18 +688,14 @@
     <div class="sidebar-container" id="sidebarContainer">
         <div class="sidebar" id="sidebar">
             <div class="logo-area">
-                <span>Ветки квестов</span>
-                <span class="total-badge" id="totalCount">0</span>
+                <span class="logo-line1">CubixWorld</span>
+                <span class="logo-line2">TechnoMagic Quests</span>
             </div>
             <ul class="menu-list" id="menu">
                 <li id="btnAll" class="active">Показать все <span class="menu-count" id="allCount">0</span></li>
             </ul>
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" title="Свернуть/развернуть">
-            <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 1L2 7L7 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
+
         <div class="resizer" id="resizer"></div>
     </div>
 
@@ -748,7 +714,7 @@
 
     <div class="main-content">
         <div class="top-bar">
-            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Открыть меню веток">
+            <button class="menu-btn" id="menuBtn" aria-label="Меню веток">
                 <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="0" y="0" width="18" height="2" rx="1" fill="currentColor"/>
                     <rect x="0" y="6" width="12" height="2" rx="1" fill="currentColor"/>
@@ -792,7 +758,6 @@
         const contentArea = document.getElementById('contentArea');
         const menu = document.getElementById('menu');
         const searchInp = document.getElementById('search');
-        const totalCountEl = document.getElementById('totalCount');
         const allCountEl = document.getElementById('allCount');
         const modal = document.getElementById('modal');
 
@@ -858,28 +823,6 @@
                 isResizing = false;
                 resizer.classList.remove('active');
                 document.body.style.cursor = 'default';
-            }
-        });
-
-        // --- КНОПКА СВЕРНУТЬ/РАЗВЕРНУТЬ ---
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        let lastSidebarWidth = null;
-
-        sidebarToggle.addEventListener('click', () => {
-            const isCollapsed = sidebarContainer.classList.contains('collapsed');
-            if (isCollapsed) {
-                // Разворачиваем: убираем transition на sidebar, чтобы плавно задать ширину
-                sidebarContainer.classList.remove('collapsed');
-                if (lastSidebarWidth) {
-                    // Небольшая задержка, чтобы transition успел "включиться" после убирания collapsed
-                    requestAnimationFrame(() => {
-                        sidebar.style.width = lastSidebarWidth;
-                    });
-                }
-            } else {
-                // Сворачиваем
-                lastSidebarWidth = sidebar.style.width || sidebar.offsetWidth + 'px';
-                sidebarContainer.classList.add('collapsed');
             }
         });
 
@@ -957,9 +900,8 @@
                     line.quests.forEach(qId => { questThemes[qId] = line.theme; });
                 });
 
-                // Обновляем глобальные счетчики
+                // Обновляем счетчики
                 const totalNonHidden = Object.keys(db.quests).length;
-                totalCountEl.innerText = totalNonHidden;
                 allCountEl.innerText = totalNonHidden;
                 document.getElementById('mobileAllCount').innerText = totalNonHidden;
 
@@ -991,7 +933,25 @@
                 document.body.style.overflow = '';
             }
 
-            document.getElementById('mobileMenuBtn').addEventListener('click', openDrawer);
+            let lastSidebarWidth = null;
+            document.getElementById('menuBtn').addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    openDrawer();
+                } else {
+                    const isCollapsed = sidebarContainer.classList.contains('collapsed');
+                    if (isCollapsed) {
+                        sidebarContainer.classList.remove('collapsed');
+                        if (lastSidebarWidth) {
+                            requestAnimationFrame(() => {
+                                sidebar.style.width = lastSidebarWidth;
+                            });
+                        }
+                    } else {
+                        lastSidebarWidth = sidebar.style.width || sidebar.offsetWidth + 'px';
+                        sidebarContainer.classList.add('collapsed');
+                    }
+                }
+            });
             document.getElementById('drawerClose').addEventListener('click', closeDrawer);
             mobileOverlay.addEventListener('click', closeDrawer);
 
