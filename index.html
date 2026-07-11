@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>База Квестов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Сбалансированная палитра Cubix-стиля */
+            --bg-main: #181920;
+            --bg-sidebar: #1e1f28;
+            --bg-card: #22232e;
+            --bg-card-hover: #2b2d3b;
+            --bg-input: #15161d;
+            --border-color: #2e303e;
+
+            --text-main: #e2e8f0;
+            --text-muted: #798299;
+            --text-accent: #a78bfa;
+            --text-gold: #fbbf24;
+
+            --dot-neon: #00f0ff;
+            --dot-gold: #ffd700;
+            --dot-magenta: #ff00ea;
+            --dot-green: #00ff88;
+        }
+
+        /* Полностью темный кастомный скроллбар */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f4254;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #565a73;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mono {
+            font-family: monospace;
+        }
+
+        /* --- ЛЕВОЕ МЕНЮ С ИЗМЕНЕНИЕМ РАЗМЕРА --- */
+        .sidebar-container {
+            position: relative;
+            display: flex;
+            flex-shrink: 0;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar {
+            width: 260px;
+            min-width: 200px;
+            max-width: 45vw;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            overflow: hidden;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- СОСТОЯНИЕ СВЁРНУТОГО САЙДБАРА --- */
+        .sidebar-container.collapsed .sidebar {
+            width: 0 !important;
+            min-width: 0;
+        }
+
+        .sidebar-container.collapsed .resizer {
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* --- КНОПКА СВЕРНУТЬ/РАЗВЕРНУТЬ --- */
+        .sidebar-toggle {
+            position: absolute;
+            right: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 30;
+            width: 28px;
+            height: 52px;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 3px 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-accent);
+            box-shadow: 3px 0 12px rgba(167, 139, 250, 0.25);
+        }
+
+        .sidebar-toggle svg {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-container.collapsed .sidebar-toggle svg {
+            transform: rotate(180deg);
+        }
+
+        .resizer {
+            width: 4px;
+            cursor: col-resize;
+            background: transparent;
+            position: absolute;
+            right: -2px;
+            top: 0;
+            bottom: 0;
+            z-index: 20;
+            transition: background 0.2s, opacity 0.3s;
+        }
+
+        .resizer:hover,
+        .resizer.active {
+            background: var(--text-accent);
+        }
+
+        .logo-area {
+            padding: 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-badge {
+            font-size: 0.75rem;
+            background: var(--bg-input);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--text-muted);
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 15px 10px;
+            margin: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .menu-list li {
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-list li:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-main);
+        }
+
+        .menu-list li.active {
+            background: rgba(167, 139, 250, 0.1);
+            color: var(--text-main);
+            font-weight: 600;
+            border-left: 3px solid var(--text-accent);
+            border-radius: 0 6px 6px 0;
+            padding-left: 9px;
+        }
+
+        .menu-count {
+            font-size: 0.75rem;
+            opacity: 0.5;
+        }
+
+        /* --- ОСНОВНАЯ РАБОЧАЯ ОБЛАСТЬ --- */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* Верхняя панель поиска */
+        .top-bar {
+            padding: 15px 30px;
+            background-color: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            box-sizing: border-box;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--text-accent);
+        }
+
+        .quests-view {
+            flex-grow: 1;
+            padding: 10px 30px 40px 30px;
+            overflow-y: auto;
+        }
+
+        /* Категории-разделители */
+        .category-header {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 30px 0 15px 0;
+        }
+
+        .category-header::before,
+        .category-header::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-header::before {
+            margin-right: 15px;
+        }
+
+        .category-header::after {
+            margin-left: 15px;
+        }
+
+        .category-count {
+            margin-left: 6px;
+            opacity: 0.5;
+        }
+
+        /* Сетка */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            background-color: var(--bg-card-hover);
+            border-color: #43465e;
+        }
+
+        .card-left {
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .card-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .card-title {
+            font-size: 0.88rem;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .card-id {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        /* Цвета индикаторов */
+        .dot-neon {
+            background: var(--dot-neon);
+            box-shadow: 0 0 6px rgba(0, 240, 255, 0.4);
+        }
+
+        .dot-gold {
+            background: var(--dot-gold);
+            box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+        }
+
+        .dot-magenta {
+            background: var(--dot-magenta);
+            box-shadow: 0 0 6px rgba(255, 0, 234, 0.4);
+        }
+
+        .dot-green {
+            background: var(--dot-green);
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+        }
+
+        /* --- МОДАЛЬНОЕ ОКНО --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-box {
+            background: #1e1f28;
+            border: 1px solid #3c3266;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+            transform: translateY(15px);
+            transition: 0.3s;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .m-header {
+            margin-bottom: 20px;
+        }
+
+        .m-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+        }
+
+        .m-id {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .m-section {
+            margin-bottom: 15px;
+        }
+
+        .m-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .m-line-name {
+            color: var(--text-gold);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .m-desc {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        .m-req-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .m-req-list li {
+            position: relative;
+            padding-left: 14px;
+            font-size: 0.88rem;
+            color: #d1d5db;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+
+        .m-req-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+        }
+
+        .m-req-list li:hover {
+            color: var(--text-main);
+            text-decoration: underline;
+        }
+
+        .m-req-id {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            margin-left: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* ============================================
+           МОБИЛЬНЫЙ АДАПТИВ (≤ 768px)
+           ============================================ */
+
+        /* Кнопка-гамбургер в шапке (только мобильный) */
+        .mobile-menu-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-right: 12px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .mobile-menu-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-accent);
+        }
+
+        /* Оверлей для мобильного drawer */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mobile-overlay.active {
+            opacity: 1;
+        }
+
+        /* Drawer — скрыт на десктопе */
+        .mobile-drawer {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                height: 100dvh;
+                overflow: hidden;
+            }
+
+            /* Скрываем десктопный сайдбар и его элементы */
+            .sidebar-container {
+                display: none !important;
+            }
+
+            .mobile-overlay {
+                display: block;
+                pointer-events: none;
+            }
+
+            .mobile-overlay.active {
+                pointer-events: all;
+            }
+
+            /* Показываем гамбургер */
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            /* Шапка на мобильном */
+            .top-bar {
+                padding: 12px 16px;
+                position: relative;
+                z-index: 10;
+            }
+
+            .search-wrapper {
+                max-width: 100%;
+            }
+
+            /* Контент занимает всё оставшееся место */
+            .main-content {
+                height: 100%;
+                overflow: hidden;
+            }
+
+            /* Меньше паддингов в области квестов */
+            .quests-view {
+                padding: 8px 12px 80px 12px;
+            }
+
+            /* Одна колонка на мобильном */
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            /* Drawer — выезжает снизу */
+            .mobile-drawer {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 210;
+                background: var(--bg-sidebar);
+                border-top: 1px solid var(--border-color);
+                border-radius: 16px 16px 0 0;
+                max-height: 75dvh;
+                display: flex;
+                flex-direction: column;
+                transform: translateY(100%);
+                transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+            }
+
+            .mobile-drawer.open {
+                transform: translateY(0);
+            }
+
+            /* Ручка drawer */
+            .drawer-handle {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 12px 0 6px;
+                flex-shrink: 0;
+                cursor: grab;
+            }
+
+            .drawer-handle::before {
+                content: '';
+                display: block;
+                width: 40px;
+                height: 4px;
+                border-radius: 2px;
+                background: var(--border-color);
+            }
+
+            /* Заголовок drawer */
+            .drawer-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 4px 16px 12px;
+                flex-shrink: 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .drawer-title {
+                font-size: 0.85rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-accent);
+            }
+
+            .drawer-close {
+                background: none;
+                border: none;
+                color: var(--text-muted);
+                font-size: 1.3rem;
+                cursor: pointer;
+                padding: 0;
+                line-height: 1;
+            }
+
+            /* Список веток внутри drawer */
+            .mobile-menu-list {
+                list-style: none;
+                padding: 10px 10px;
+                margin: 0;
+                overflow-y: auto;
+                flex-grow: 1;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .mobile-menu-list li {
+                padding: 13px 14px;
+                margin-bottom: 4px;
+                cursor: pointer;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-weight: 500;
+                color: var(--text-muted);
+                transition: all 0.2s;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .mobile-menu-list li:active {
+                background: rgba(255, 255, 255, 0.04);
+            }
+
+            .mobile-menu-list li.active {
+                background: rgba(167, 139, 250, 0.12);
+                color: var(--text-main);
+                font-weight: 600;
+                border-left: 3px solid var(--text-accent);
+                border-radius: 0 8px 8px 0;
+                padding-left: 11px;
+            }
+
+            /* Модальное окно на мобильном */
+            .modal-box {
+                width: 96%;
+                max-height: 90dvh;
+                padding: 18px;
+                border-radius: 12px;
+            }
+
+            .category-header {
+                margin: 20px 0 10px 0;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar-container" id="sidebarContainer">
+        <div class="sidebar" id="sidebar">
+            <div class="logo-area">
+                <span>Ветки квестов</span>
+                <span class="total-badge" id="totalCount">0</span>
+            </div>
+            <ul class="menu-list" id="menu">
+                <li id="btnAll" class="active">Показать все <span class="menu-count" id="allCount">0</span></li>
+            </ul>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" title="Свернуть/развернуть">
+            <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1L2 7L7 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <div class="resizer" id="resizer"></div>
+    </div>
+
+    <!-- Мобильный оверлей и drawer -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-drawer" id="mobileDrawer">
+        <div class="drawer-handle"></div>
+        <div class="drawer-header">
+            <span class="drawer-title">Ветки квестов</span>
+            <button class="drawer-close" id="drawerClose">&times;</button>
+        </div>
+        <ul class="mobile-menu-list" id="mobileMenu">
+            <li id="mobileBtnAll" class="active">Показать все <span class="menu-count" id="mobileAllCount">0</span></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Открыть меню веток">
+                <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0" y="0" width="18" height="2" rx="1" fill="currentColor"/>
+                    <rect x="0" y="6" width="12" height="2" rx="1" fill="currentColor"/>
+                    <rect x="0" y="12" width="18" height="2" rx="1" fill="currentColor"/>
+                </svg>
+            </button>
+            <div class="search-wrapper">
+                <input type="text" id="search" class="search-input" placeholder="Поиск по названию или ID..."
+                    autocomplete="off">
+            </div>
+        </div>
+
+        <div class="quests-view">
+            <div id="contentArea"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="m-header">
+                <h2 class="m-title" id="m-title">Название квеста</h2>
+                <div class="m-id">ID: <span id="m-id-val">0</span></div>
+            </div>
+            <div class="m-section">
+                <div class="m-label">Ветка</div>
+                <div class="m-line-name" id="m-line">-</div>
+            </div>
+            <div class="m-section" id="m-req-block">
+                <div class="m-label">Зависит от</div>
+                <ul class="m-req-list" id="m-req-list"></ul>
+            </div>
+            <div class="m-section">
+                <div class="m-label">Описание</div>
+                <div class="m-desc" id="m-desc">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const contentArea = document.getElementById('contentArea');
+        const menu = document.getElementById('menu');
+        const searchInp = document.getElementById('search');
+        const totalCountEl = document.getElementById('totalCount');
+        const allCountEl = document.getElementById('allCount');
+        const modal = document.getElementById('modal');
+
+        let db = { quests: {}, lines: [] };
+        const questThemes = {};
+        let selectedLineRef = null; // null означает "Все квесты"
+
+        // Парсер цветовых кодов Minecraft
+        function formatMC(text) {
+            if (!text) return "";
+            const colorMap = {
+                '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+                '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+                '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+                'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+            };
+            const formatMap = { 'l': 'font-weight: bold;', 'm': 'text-decoration: line-through;', 'n': 'text-decoration: underline;', 'o': 'font-style: italic;' };
+
+            let html = '';
+            let currentStyles = [];
+            let parts = text.split(/(§[0-9a-fk-or])/i);
+
+            for (let part of parts) {
+                if (part.toLowerCase().startsWith('§')) {
+                    let code = part[1].toLowerCase();
+                    if (code === 'r') {
+                        if (currentStyles.length > 0) { html += '</span>'.repeat(currentStyles.length); currentStyles = []; }
+                    } else if (colorMap[code]) {
+                        if (currentStyles.length > 0) { html += '</span>'.repeat(currentStyles.length); currentStyles = []; }
+                        html += `<span style="color: ${colorMap[code]}">`;
+                        currentStyles.push('color');
+                    } else if (formatMap[code]) {
+                        html += `<span style="${formatMap[code]}">`;
+                        currentStyles.push('format');
+                    }
+                } else {
+                    html += part;
+                }
+            }
+            html += '</span>'.repeat(currentStyles.length);
+            return html;
+        }
+
+        // --- УПРАВЛЕНИЕ ШИРИНОЙ МЕНЮ (Resizer) ---
+        const resizer = document.getElementById('resizer');
+        const sidebarContainer = document.getElementById('sidebarContainer');
+        const sidebar = document.getElementById('sidebar');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            if (sidebarContainer.classList.contains('collapsed')) return;
+            isResizing = true;
+            resizer.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            sidebar.style.width = e.clientX + 'px';
+        });
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('active');
+                document.body.style.cursor = 'default';
+            }
+        });
+
+        // --- КНОПКА СВЕРНУТЬ/РАЗВЕРНУТЬ ---
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        let lastSidebarWidth = null;
+
+        sidebarToggle.addEventListener('click', () => {
+            const isCollapsed = sidebarContainer.classList.contains('collapsed');
+            if (isCollapsed) {
+                // Разворачиваем: убираем transition на sidebar, чтобы плавно задать ширину
+                sidebarContainer.classList.remove('collapsed');
+                if (lastSidebarWidth) {
+                    // Небольшая задержка, чтобы transition успел "включиться" после убирания collapsed
+                    requestAnimationFrame(() => {
+                        sidebar.style.width = lastSidebarWidth;
+                    });
+                }
+            } else {
+                // Сворачиваем
+                lastSidebarWidth = sidebar.style.width || sidebar.offsetWidth + 'px';
+                sidebarContainer.classList.add('collapsed');
+            }
+        });
+
+        // --- DIRECT PARSING OF QuestDatabase.json ---
+        async function loadRealDatabase() {
+            try {
+                // Читаем ОРИГИНАЛЬНЫЙ файл базы BetterQuesting
+                const response = await fetch('QuestDatabase.json');
+                if (!response.ok) throw new Error("Файл QuestDatabase.json не найден");
+
+                const rawData = await response.json();
+
+                const bqQuests = rawData["questDatabase:9"] || rawData["questDatabase"] || {};
+                const bqLines = rawData["questLines:9"] || rawData["questLines"] || {};
+                const themes = ["neon", "gold", "magenta", "green"];
+
+                // 1. Извлекаем и фильтруем квесты
+                for (const key in bqQuests) {
+                    const q = bqQuests[key];
+                    const qId = q["questID:3"] !== undefined ? q["questID:3"] : q.questID;
+                    const props = q["properties:10"]?.["betterquesting:10"] || q.properties?.betterquesting;
+
+                    if (qId !== undefined && props) {
+                        // ФИЛЬТР: Проверяем условие HIDDEN
+                        const visibility = props["visibility:8"] || props.visibility;
+                        if (visibility && visibility.toString().toUpperCase() === "HIDDEN") {
+                            continue; // ПОЛНОСТЬЮ ИГНОРИРУЕМ
+                        }
+
+                        db.quests[qId] = {
+                            id: qId,
+                            name: props["name:8"] || props.name || "Без названия",
+                            desc: props["desc:8"] || props.desc || "Нет описания",
+                            preReqs: q["preRequisites:11"] || q.preRequisites || []
+                        };
+                    }
+                }
+
+                // 2. Извлекаем и сортируем ветки квестов
+                // В BetterQuesting порядок веток определяется полем "order:3", а не ключом словаря
+                const sortedLines = Object.entries(bqLines).sort((a, b) => {
+                    const orderA = a[1]["order:3"] !== undefined ? a[1]["order:3"] : (a[1].order !== undefined ? a[1].order : parseInt(a[0]));
+                    const orderB = b[1]["order:3"] !== undefined ? b[1]["order:3"] : (b[1].order !== undefined ? b[1].order : parseInt(b[0]));
+                    return orderA - orderB;
+                });
+
+                sortedLines.forEach(([key, line], lineIdx) => {
+                    const props = line["properties:10"]?.["betterquesting:10"] || line.properties?.betterquesting;
+                    const lineName = props?.["name:8"] || props?.name || `Ветка ${key}`;
+
+                    const questsInLine = [];
+                    const lineQuestsObj = line["quests:9"] || line.quests || {};
+
+                    for (const qKey in lineQuestsObj) {
+                        const questRef = lineQuestsObj[qKey];
+                        const id = questRef["id:3"] !== undefined ? questRef["id:3"] : questRef.id;
+
+                        // Добавляем ID в ветку только если квест существует (и прошел фильтр HIDDEN ранее)
+                        if (id !== undefined && db.quests[id]) {
+                            questsInLine.push(id);
+                        }
+                    }
+
+                    if (questsInLine.length > 0) {
+                        db.lines.push({
+                            name: lineName,
+                            quests: questsInLine,
+                            theme: themes[lineIdx % themes.length]
+                        });
+                    }
+                });
+
+                // Связываем квесты с цветами веток
+                db.lines.forEach(line => {
+                    line.quests.forEach(qId => { questThemes[qId] = line.theme; });
+                });
+
+                // Обновляем глобальные счетчики
+                const totalNonHidden = Object.keys(db.quests).length;
+                totalCountEl.innerText = totalNonHidden;
+                allCountEl.innerText = totalNonHidden;
+                document.getElementById('mobileAllCount').innerText = totalNonHidden;
+
+                init();
+            } catch (error) {
+                console.error("Ошибка:", error);
+                contentArea.innerHTML = `
+                    <div class="empty-state" style="color: #ff5555;">
+                        Ошибка загрузки оригинального файла <b>QuestDatabase.json</b>.<br>
+                        Убедитесь, что файл лежит в одной папке с сайтом и запущен Live Server.
+                    </div>`;
+            }
+        }
+
+        function init() {
+            // --- Вспомогательные функции для мобильного drawer ---
+            const mobileDrawer = document.getElementById('mobileDrawer');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const mobileMenu = document.getElementById('mobileMenu');
+
+            function openDrawer() {
+                mobileDrawer.classList.add('open');
+                mobileOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeDrawer() {
+                mobileDrawer.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            document.getElementById('mobileMenuBtn').addEventListener('click', openDrawer);
+            document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+            mobileOverlay.addEventListener('click', closeDrawer);
+
+            // Синхронизируем выбор ветки между десктопом и мобильным
+            function selectLine(lineRef) {
+                selectedLineRef = lineRef;
+                searchInp.value = '';
+                renderView();
+            }
+
+            // --- Генерация десктопного бокового меню ---
+            db.lines.forEach(line => {
+                const li = document.createElement('li');
+                const cleanName = line.name.replace(/§[0-9a-fk-or]/gi, '');
+                li.innerHTML = `<span>${cleanName}</span> <span class="menu-count">${line.quests.length}</span>`;
+                li.onclick = () => {
+                    document.querySelectorAll('.menu-list li').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll('.mobile-menu-list li').forEach(el => el.classList.remove('active'));
+                    li.classList.add('active');
+                    selectLine(line);
+                };
+                menu.appendChild(li);
+            });
+
+            document.getElementById('btnAll').onclick = () => {
+                document.querySelectorAll('.menu-list li').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.mobile-menu-list li').forEach(el => el.classList.remove('active'));
+                document.getElementById('btnAll').classList.add('active');
+                document.getElementById('mobileBtnAll').classList.add('active');
+                selectLine(null);
+            };
+
+            // --- Генерация мобильного меню в drawer ---
+            db.lines.forEach(line => {
+                const li = document.createElement('li');
+                const cleanName = line.name.replace(/§[0-9a-fk-or]/gi, '');
+                li.innerHTML = `<span>${cleanName}</span> <span class="menu-count">${line.quests.length}</span>`;
+                li.onclick = () => {
+                    document.querySelectorAll('.menu-list li').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll('.mobile-menu-list li').forEach(el => el.classList.remove('active'));
+                    li.classList.add('active');
+                    selectLine(line);
+                    closeDrawer();
+                };
+                mobileMenu.appendChild(li);
+            });
+
+            document.getElementById('mobileBtnAll').onclick = () => {
+                document.querySelectorAll('.menu-list li').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.mobile-menu-list li').forEach(el => el.classList.remove('active'));
+                document.getElementById('btnAll').classList.add('active');
+                document.getElementById('mobileBtnAll').classList.add('active');
+                selectLine(null);
+                closeDrawer();
+            };
+
+            searchInp.addEventListener('input', () => renderView());
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            renderView(); // Первичный рендер
+        }
+
+        // Умный комбинированный рендер (учитывает выбранную ветку + поисковую строку)
+        function renderView() {
+            contentArea.innerHTML = '';
+            const searchVal = searchInp.value.toLowerCase().trim();
+
+            // Определяем, какие ветки мы будем проверять на отображение
+            const scopeLines = selectedLineRef ? [selectedLineRef] : db.lines;
+            const fragment = document.createDocumentFragment();
+
+            scopeLines.forEach(line => {
+                // Фильтруем квесты внутри ветки по поисковому запросу
+                const filteredQuests = line.quests.filter(qId => {
+                    const quest = db.quests[qId];
+                    if (!quest) return false;
+                    if (!searchVal) return true;
+                    const cleanName = quest.name.replace(/§[0-9a-fk-or]/gi, '').toLowerCase();
+                    return cleanName.includes(searchVal) || quest.id.toString() === searchVal;
+                });
+
+                // Если в ветке есть подходящие квесты, рисуем её
+                if (filteredQuests.length > 0) {
+                    const header = document.createElement('div');
+                    header.className = 'category-header';
+                    const cleanLineName = line.name.replace(/§[0-9a-fk-or]/gi, '');
+                    header.innerHTML = `${cleanLineName} <span class="category-count">${filteredQuests.length}</span>`;
+                    fragment.appendChild(header);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'grid';
+
+                    filteredQuests.forEach(qId => {
+                        const quest = db.quests[qId];
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.onclick = () => openModal(quest, line.name);
+
+                        const dotTheme = questThemes[qId] ? `dot-${questThemes[qId]}` : 'dot-green';
+
+                        card.innerHTML = `
+                            <div class="card-left">
+                                <div class="card-dot ${dotTheme}"></div>
+                                <div class="card-title">${formatMC(quest.name)}</div>
+                            </div>
+                            <div class="card-id">#${quest.id}</div>
+                        `;
+                        grid.appendChild(card);
+                    });
+
+                    fragment.appendChild(grid);
+                }
+            });
+
+            if (fragment.children.length === 0) {
+                contentArea.innerHTML = '<div class="empty-state">Квесты не найдены.</div>';
+            } else {
+                contentArea.appendChild(fragment);
+            }
+        }
+
+        function openModal(quest, lineName) {
+            document.getElementById('m-title').innerHTML = formatMC(quest.name);
+            document.getElementById('m-id-val').innerText = quest.id;
+            document.getElementById('m-line').innerHTML = formatMC(lineName);
+
+            let formattedDesc = formatMC(quest.desc).replace(/\n/g, '<br>');
+            document.getElementById('m-desc').innerHTML = formattedDesc;
+
+            const reqBlock = document.getElementById('m-req-block');
+            const reqList = document.getElementById('m-req-list');
+            reqList.innerHTML = '';
+
+            if (quest.preReqs && quest.preReqs.length > 0) {
+                reqBlock.style.display = 'block';
+                // Показываем только зависимости, которые сами не скрыты
+                let validReqsCount = 0;
+
+                quest.preReqs.forEach(reqId => {
+                    const reqQuest = db.quests[reqId];
+                    // Если родительский квест был скрыт фильтром HIDDEN, ставим пометку
+                    const rawName = reqQuest ? reqQuest.name : 'Скрытый квест (HIDDEN)';
+
+                    const li = document.createElement('li');
+                    li.innerHTML = `${formatMC(rawName)} <span class="m-req-id">[${reqId}]</span>`;
+
+                    if (reqQuest) {
+                        li.onclick = () => {
+                            closeModal();
+                            searchInp.value = reqId;
+                            // Сбрасываем фильтр категорий, чтобы найти квест глобально
+                            document.querySelectorAll('.menu-list li').forEach(el => el.classList.remove('active'));
+                            document.getElementById('btnAll').classList.add('active');
+                            selectedLineRef = null;
+                            renderView();
+                        };
+                    } else {
+                        li.style.cursor = 'default';
+                        li.style.opacity = '0.5';
+                    }
+                    reqList.appendChild(li);
+                    validReqsCount++;
+                });
+
+                if (validReqsCount === 0) reqBlock.style.display = 'none';
+            } else {
+                reqBlock.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() { modal.classList.remove('active'); }
+
+        // Запуск глобального процесса
+        loadRealDatabase();
+    </script>
+</body>
+
+</html>
